@@ -1,23 +1,21 @@
 #!/bin/sh
 
-# Create a regex for a conventional commit.
-conventional_commit_regex="^\(build\|chore\|ci\|docs\|feat\|fix\|perf\|refactor\|revert\|style\|test\)(\([a-zA-Z]\+-[0-9 \-]\+\))?!\?: .\+$"
+# regex pour valider un message de commit préfixé par un ID de ticket (ex: SOD-1010: Mon message)
+ticket_commit_regex="^[A-Z]{2,}-[0-9]+: .+$"
 
-# Get the commit message (the file path is passed as $1).
-commit_message="$(cat "$1")"
+# récupère le message de commit (le chemin du fichier est passé en argument $1)
+commit_message=$(cat "$1")
 
-echo "Commit message identified as: $commit_message"
-
-# Check if the message matches the regex
-echo "$commit_message" | grep -Eq "$conventional_commit_regex"
-if [ $? -eq 0 ]; then
-  echo "Commit message meets Conventional Commit standards."
+# vérifie si le message de commit correspond à la regex
+if echo "$commit_message" | grep -Eq "$ticket_commit_regex"; then
+  echo "Format du commit valide (Ticket ID trouvé)."
   exit 0
+else
+  # le format n'est pas bon.
+  echo "\033[31mERREUR : Le format de votre message de commit est invalide.\033[0m"
+  echo "Il doit obligatoirement commencer par un ID de ticket suivi de ':', d'un espace, puis de votre message."
+  echo ""
+  echo "\033[32mExemple valide : SOD-1010: Ajout de la fonctionnalité de connexion\033[0m"
+  echo ""
+  exit 1
 fi
-
-# Not a conventional commit – print error and example
-echo "\033[31m Commit message does not meet the Conventional Commit standard\033[0m"
-echo " Example of a valid message is:"
-echo " feat(login): add the 'remember me' button"
-echo " More details at: https://www.conventionalcommits.org/en/v1.0.0/#summary"
-exit 1
